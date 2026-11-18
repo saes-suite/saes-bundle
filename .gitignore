@@ -1,0 +1,24 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+
+# Python / uv / PyInstaller
+__pycache__/
+*.py[cod]
+.coverage
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+packaging/build/
+packaging/dist/
+packaging/.venv/
+
+# Node / pnpm
+.pnpm-store/
+node_modules/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep

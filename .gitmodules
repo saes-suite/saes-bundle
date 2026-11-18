@@ -1,0 +1,9 @@
+[submodule "saesV2"]
+	path = saesV2
+	url = https://github.com/saes-suite/saesV2.git
+[submodule "saes-ai"]
+	path = saes-ai
+	url = https://github.com/saes-suite/saes-ai.git
+[submodule "saes-ui"]
+	path = saes-ui
+	url = https://github.com/saes-suite/saes-ui.git

@@ -1,0 +1,122 @@
+name: Release Stamp & Publish
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        default: minor
+        options:
+          - minor
+          - patch
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Stamp Changelog & Bump Version
+    if: "github.event_name == 'workflow_dispatch' || (!startsWith(github.event.head_commit.message, 'Setting release v') && !contains(github.event.head_commit.message, '[skip ci]'))"
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.stamp.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Determine bump type from commit, PR branch, or manual input
+        id: bump
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          AUTHOR="@${{ github.actor }}"
+          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "bump=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
+          elif echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+ from [^/]+/(major)[/-]"; then
+            echo "bump=major" >> "$GITHUB_OUTPUT"
+          elif echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+ from [^/]+/(patch|fix|hotfix)[/-]"; then
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+          elif echo "$COMMIT_MSG" | grep -qiE "^(major(\(.+\))?!?:|.*BREAKING CHANGE)"; then
+            echo "bump=major" >> "$GITHUB_OUTPUT"
+          elif echo "$COMMIT_MSG" | grep -qiE "^(fix|patch|hotfix)(\(.+\))?:"; then
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+          else
+            echo "bump=minor" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stamp changelog and bump version
+        id: stamp
+        run: |
+          node scripts/release_stamp.js \
+            --bump "${{ steps.bump.outputs.bump }}" \
+            --author "${{ steps.bump.outputs.author }}"
+          cargo update --offline -p saes-desktop --manifest-path src-tauri/Cargo.toml || true
+          RELEASE_VERSION=$(cat version.txt | sed 's/-SNAPSHOT//')
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Upload bumped release metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-metadata
+          path: |
+            version.txt
+            CHANGELOG.md
+            src-tauri/tauri.conf.json
+            src-tauri/Cargo.toml
+            src-tauri/Cargo.lock
+
+  publish-desktop:
+    name: Build & Publish Desktop Packages
+    needs: prepare
+    uses: ./.github/workflows/desktop-build.yml
+    with:
+      release_tag: v${{ needs.prepare.outputs.version }}
+      checkout_ref: ${{ github.sha }}
+      use_release_metadata: true
+    secrets: inherit
+
+  commit-and-push:
+    name: Commit & Push Release Stamp
+    needs: [prepare, publish-desktop]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.ref_name }}
+
+      - name: Download bumped release metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata
+          path: .
+
+      - name: Commit and push release changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.txt CHANGELOG.md src-tauri/tauri.conf.json src-tauri/Cargo.toml
+          if [ -f src-tauri/Cargo.lock ]; then git add src-tauri/Cargo.lock; fi
+          RELEASE_VERSION="${{ needs.prepare.outputs.version }}"
+          git commit -m "Setting release v${RELEASE_VERSION} [skip ci]"
+          git push
