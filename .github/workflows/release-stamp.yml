@@ -1,7 +1,8 @@
 name: Release Stamp & Publish
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [main, master]
   workflow_dispatch:
     inputs:
@@ -21,7 +22,7 @@ permissions:
 jobs:
   prepare:
     name: Stamp Changelog & Bump Version
-    if: "github.event_name == 'workflow_dispatch' || (!startsWith(github.event.head_commit.message, 'Setting release v') && !contains(github.event.head_commit.message, '[skip ci]'))"
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.stamp.outputs.version }}
@@ -40,26 +41,26 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Determine bump type from commit, PR branch, or manual input
+      - name: Determine bump type from PR branch or manual input
         id: bump
-        env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          AUTHOR="@${{ github.actor }}"
-          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
-
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "author=@${{ github.actor }}" >> "$GITHUB_OUTPUT"
             echo "bump=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
-          elif echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+ from [^/]+/(major)[/-]"; then
-            echo "bump=major" >> "$GITHUB_OUTPUT"
-          elif echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+ from [^/]+/(patch|fix|hotfix)[/-]"; then
-            echo "bump=patch" >> "$GITHUB_OUTPUT"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(major(\(.+\))?!?:|.*BREAKING CHANGE)"; then
-            echo "bump=major" >> "$GITHUB_OUTPUT"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(fix|patch|hotfix)(\(.+\))?:"; then
-            echo "bump=patch" >> "$GITHUB_OUTPUT"
           else
-            echo "bump=minor" >> "$GITHUB_OUTPUT"
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            AUTHOR="@${{ github.event.pull_request.user.login }}"
+            echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+
+            if [[ "$BRANCH" == major/* || "$BRANCH" == major-* ]]; then
+              echo "bump=major" >> "$GITHUB_OUTPUT"
+            elif [[ "$BRANCH" == patch/* || "$BRANCH" == patch-* || \
+                    "$BRANCH" == fix/* || "$BRANCH" == fix-* || \
+                    "$BRANCH" == hotfix/* || "$BRANCH" == hotfix-* ]]; then
+              echo "bump=patch" >> "$GITHUB_OUTPUT"
+            else
+              echo "bump=minor" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
       - name: Stamp changelog and bump version

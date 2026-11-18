@@ -155,7 +155,7 @@ def build_sidecar(target: str, skip_install: bool = False) -> Path:
     if not is_windows:
         dest_bin.chmod(0o755)
 
-    print(f"✅ Sidecar directory ready at: {dest_dir}")
+    print(f"[OK] Sidecar directory ready at: {dest_dir}")
     return dest_bin
 
 
