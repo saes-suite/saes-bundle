@@ -1,4 +1,4 @@
-.PHONY: help install start start-desktop stop status start-saes start-saesV2 start-ai start-ai-debug start-ui start-ui-desktop build-backend build-desktop lint format test ci version release-dry-run release-stamp branch
+.PHONY: help install start start-desktop stop status start-saes start-saesV2 start-ai start-ai-debug start-ui start-ui-desktop build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
 
 SHELL := /bin/bash
 export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:$(PATH)
@@ -86,24 +86,27 @@ build-desktop: build-backend ## Genera el ejecutable/instalador desktop de SAES 
 	$(TAURI_BIN) build
 
 # ── Quality & CI ─────────────────────────────────────────────
-lint: ## Ejecuta los linters en los 3 servicios
+lint: ## Ejecuta los linters en los 4 repositorios
 	$(MAKE) -C saesV2 lint
 	$(MAKE) -C saes-ai lint
 	$(MAKE) -C saes-ui lint
+	$(MAKE) -C saes-plugins lint
 
 format: ## Formatea el código en los 3 servicios
 	$(MAKE) -C saesV2 format
 	$(MAKE) -C saes-ai format
 	$(MAKE) -C saes-ui format
 
-test: ## Ejecuta los tests de saesV2 y saes-ai
+test: ## Ejecuta los tests de saesV2, saes-ai y saes-plugins
 	$(MAKE) -C saesV2 test
 	$(MAKE) -C saes-ai test
+	$(MAKE) -C saes-plugins test
 
-ci: ## Ejecuta las validaciones de CI en los 3 servicios y el wrapper Tauri
+ci: ## Ejecuta las validaciones de CI en los 4 repositorios y el wrapper Tauri
 	$(MAKE) -C saesV2 ci
 	$(MAKE) -C saes-ai ci
 	$(MAKE) -C saes-ui ci
+	$(MAKE) -C saes-plugins ci
 	@CREATED_PLACEHOLDER=0; \
 	if [ ! -d "src-tauri/binaries/saes-backend" ]; then mkdir -p src-tauri/binaries/saes-backend && touch src-tauri/binaries/saes-backend/.gitkeep && CREATED_PLACEHOLDER=1; fi; \
 	cargo check --manifest-path src-tauri/Cargo.toml; \
@@ -150,3 +153,62 @@ branch: ## Crea una nueva rama con el prefijo de versión correcto
 	echo ""; \
 	echo "✅ Branch '$$BRANCH' created."; \
 	echo "📝 Remember to add your changes to CHANGELOG.md under ## [Unreleased]"
+
+sync-branch: ## Crea una rama en el umbrella, actualiza submódulos a main, hace commit y push
+	@set -e; \
+	echo ""; \
+	echo "Select branch type:"; \
+	echo "  1) feat   (minor — new feature)"; \
+	echo "  2) fix    (patch — bugfix / hotfix)"; \
+	echo "  3) major  (major — breaking change)"; \
+	echo ""; \
+	printf "Choice [1]: "; \
+	read CHOICE; \
+	case "$${CHOICE:-1}" in \
+		1) PREFIX="feat" ;; \
+		2) PREFIX="fix" ;; \
+		3) PREFIX="major" ;; \
+		*) echo "ERROR: invalid choice"; exit 1 ;; \
+	esac; \
+	echo ""; \
+	printf "Branch name (e.g. sync-submodules): "; \
+	read NAME; \
+	if [ -z "$$NAME" ]; then \
+		echo "ERROR: branch name cannot be empty"; \
+		exit 1; \
+	fi; \
+	BRANCH="$$PREFIX/$$NAME"; \
+	echo ""; \
+	echo "🌿 Creando rama '$$BRANCH' en el umbrella..."; \
+	git checkout -b "$$BRANCH"; \
+	echo ""; \
+	for repo in saesV2 saes-ai saes-ui saes-plugins; do \
+		echo "🔄 Sincronizando $$repo..."; \
+		CUR_BRANCH=$$(git -C "$$repo" rev-parse --abbrev-ref HEAD); \
+		if [ "$$CUR_BRANCH" != "main" ]; then \
+			echo "   Cambiando de '$$CUR_BRANCH' a 'main' en $$repo..."; \
+			git -C "$$repo" checkout main; \
+		fi; \
+		git -C "$$repo" pull; \
+	done; \
+	echo ""; \
+	git add -A; \
+	if git diff --cached --quiet; then \
+		echo "ℹ️  No hay cambios para hacer commit en el umbrella."; \
+	else \
+		echo "📋 Cambios preparados:"; \
+		git status -s; \
+		echo ""; \
+		printf "Commit message: "; \
+		read COMMIT_MSG; \
+		if [ -z "$$COMMIT_MSG" ]; then \
+			echo "ERROR: commit message cannot be empty"; \
+			exit 1; \
+		fi; \
+		git commit -m "$$COMMIT_MSG"; \
+	fi; \
+	echo ""; \
+	echo "🚀 Pusheando '$$BRANCH' a origin..."; \
+	git push -u origin "$$BRANCH"; \
+	echo ""; \
+	echo "✅ Rama '$$BRANCH' creada, submódulos sincronizados y cambios pusheados."

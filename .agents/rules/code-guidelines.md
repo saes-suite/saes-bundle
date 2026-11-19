@@ -5,17 +5,18 @@ trigger: always_on
 # SAES Workspace — Multi-Repo Architecture & Development Rules
 
 > This file is read automatically by Antigravity and AI assistants on every session from the workspace root.
-> It defines the cross-repository architecture, non-negotiable development principles, and quality gates across `saes`, `saes-ai`, and `saes-ui`.
+> It defines the cross-repository architecture, non-negotiable development principles, and quality gates across `saesV2`, `saes-ai`, `saes-ui`, and `saes-plugins`.
 
 ## 1. Ecosystem Overview
 
-The SAES (Stochastic Algorithm Evaluation Suite) workspace consists of three coordinated repositories:
+The SAES (Stochastic Algorithm Evaluation Suite) workspace consists of four coordinated repositories:
 
 | Repository | Port | Role | Tech Stack |
 |------------|------|------|------------|
 | **`saesV2/`** | `:8060` | Core statistical Python library (`saesV2.*`) & FastAPI REST server (`saesV2.server`) | Python >= 3.11, `uv`, Pydantic V2, NumPy, SciPy, Pandas, Statsmodels, Matplotlib, Seaborn, Plotly, FastAPI |
 | **`saes-ai/`** | `:8070` | Conversational statistical assistant, multi-provider LLM integrations, and MCP server (`saes_ai.*`) | Python >= 3.11, `uv`, FastAPI, MCP (`stdio` & `SSE`), Ollama, Anthropic, OpenAI, Gemini |
-| **`saes-ui/`** | `:1420` | Web Single Page Application (SPA) & Tauri v2 Native Desktop Client | React 18, TypeScript 5.7 (strict), Vite 6, `pnpm`, Tauri v2 (Rust), Tailwind CSS, Radix UI, Plotly.js |
+| **`saes-ui/`** | `:1420` | Web Single Page Application (SPA) (wrapped by umbrella `src-tauri/` for Tauri v2 Desktop) | React 18, TypeScript 5.7 (strict), Vite 6, `pnpm`, Tailwind CSS, Radix UI, Plotly.js |
+| **`saes-plugins/`** | `—` | Claude Code plugin marketplace & agentic development skills for `saesV2` | Markdown (`SKILL.md`), JSON manifests, Python/Node CI & release scripts |
 
 ---
 
@@ -40,11 +41,17 @@ Whenever developing a new feature across the stack, follow this strict sequence:
 3. **REST API Endpoint & MCP Tool**: Expose the Python function through FastAPI routes (`saesV2.server` / `saes_ai.server`) and, when applicable, as an MCP tool in `saes-ai`.
 4. **UI Integration (`saes-ui`)**: Add typed API client bindings in `saes-ui/src/api/` and connect React components/hooks to render the backend response without duplicating computation logic.
 
+### Rule 5: Claude Plugin Synchronization (`saes-plugins`)
+- Whenever public Python APIs in `saesV2` (`src/saesV2/__init__.py`, `src/saesV2/api.py`, public domain models/exceptions, CSV schema, plot types, or table export options) are added, modified, or removed, **you MUST update the corresponding `SKILL.md` files in `saes-plugins/plugins/saes/skills/`** in the same task to prevent API drift.
+- Record the update under `## [Unreleased]` in `saes-plugins/CHANGELOG.md` and run `make -C saes-plugins ci`.
+- **Independent Versioning**: `saes-plugins/version.txt` versions the plugin itself, not `saesV2`. Internal refactors or `patch` bugfixes in `saesV2` that do not alter the public API or methodology do not require changes in `saes-plugins`.
+- **Library Target Version (`saesV2 >= X.Y.Z`)**: Keep the minimum compatible `saesV2` version in `saes-plugins/plugins/saes/skills/saes-python-api/SKILL.md`. Do not bump it on every `saesV2` patch/minor release unless a new feature requires a higher minimum version or a `major` breaking change in `saesV2` requires raising the floor (accompanied by a `major` bump of `saes-plugins`).
+
 ---
 
 ## 3. Versioning, Branching & Changelog Rules
 
-Applies identically across `saesV2/`, `saes-ai/`, and `saes-ui/`:
+Applies identically across `saesV2/`, `saes-ai/`, `saes-ui/`, and `saes-plugins/`:
 
 1. **Single Source of Truth**: `version.txt` in each repository tracks the current semver version (`X.Y.Z`, no `-SNAPSHOT` suffixes).
 2. **Never Edit Versions Manually**: Never manually edit `version.txt`, `pyproject.toml`, `package.json`, or `Cargo.toml` versions. Always use `make release-stamp` (or `make release-dry-run` to preview).
@@ -70,6 +77,7 @@ What `make ci` verifies:
 - **`saesV2`**: `uv run ruff check .` + `uv run mypy src` + `uv run pytest`
 - **`saes-ai`**: `uv run ruff check .` + `uv run mypy src` + `uv run pytest`
 - **`saes-ui`**: `pnpm lint` (ESLint 9 + Prettier) + `pnpm typecheck` (`tsc --noEmit` strict)
+- **`saes-plugins`**: `python3 scripts/validate.py` (`make -C saes-plugins ci`)
 
 Never consider a task complete if `make ci` fails in any repository.
 
