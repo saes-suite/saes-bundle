@@ -142,8 +142,40 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''"
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_ref || github.ref }}
+
+      - name: Apply bumped release metadata
+        if: inputs.use_release_metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata
+          path: .
+
       - name: Publish draft release once all platforms succeed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
-        run: gh release edit "$TAG" --draft=false --repo "${{ github.repository }}"
+        run: |
+          python3 - <<'EOF'
+          import os, pathlib, re
+
+          version = os.environ["TAG"].lstrip("v")
+          text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pattern = re.compile(
+              rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              re.MULTILINE | re.DOTALL,
+          )
+          match = pattern.search(text)
+          if match:
+              pathlib.Path("release_notes.md").write_text(
+                  match.group(0).strip() + "\n", encoding="utf-8"
+              )
+          EOF
+          if [ -s release_notes.md ]; then
+            gh release edit "$TAG" --notes-file release_notes.md --draft=false --repo "${{ github.repository }}"
+          else
+            gh release edit "$TAG" --draft=false --repo "${{ github.repository }}"
+          fi
