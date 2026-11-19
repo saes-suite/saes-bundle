@@ -7,3 +7,6 @@
 [submodule "saes-ui"]
 	path = saes-ui
 	url = https://github.com/saes-suite/saes-ui.git
+[submodule "saes-plugins"]
+	path = saes-plugins
+	url = https://github.com/saes-suite/saes-plugins.git
