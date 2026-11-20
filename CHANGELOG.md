@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Released]
+
+## [0.5.0] — 2026-11-20 (@rorro6787)
+
 ### Added
 - Root `docker-compose.yml` orchestrating `saes-v2` (from PyPI `saesV2[all]`), `saes-ai`, and `saes-ui` with a shared `saes_datasets` volume (`SAES_DATASETS_DIR`) and healthchecks.
 - Automatic `docker-compose.yml` tag/version synchronization in `scripts/release_stamp.js` and `.github/workflows/release-stamp.yml`.
 - Docker Compose deployment instructions in `README.md`.
 
-## [Released]
+### Updated Repositories
+- **saes-ai**: `0.3.1` → `0.3.2`
+- **saes-ui**: `0.3.1` → `0.3.3`
+- **saes-plugins**: `0.2.0` → `0.2.1`
 
 ## [0.4.0] — 2026-11-20 (@rorro6787)
 

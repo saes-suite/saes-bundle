@@ -142,6 +142,9 @@
         <marker id="arr-rose" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
           <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#e11d48" />
         </marker>
+        <marker id="arr-sky" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#0284c7" />
+        </marker>
       </defs>
 
       <!-- Canvas Background -->
@@ -154,11 +157,14 @@
       <text x="148" y="32" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff" letter-spacing="0.6">SAES FRAMEWORK</text>
 
       <!-- Sub-zones inside Umbrella -->
-      <rect x="52" y="54" width="826" height="172" rx="12" fill="#ffffff" fill-opacity="0.75" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4" />
-      <text x="68" y="70" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.5">APPLICATIONS &amp; PLUGINS</text>
+      <rect x="52" y="54" width="194" height="408" rx="12" fill="#ffffff" fill-opacity="0.75" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4" />
+      <text x="68" y="70" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.5">DEPLOYMENT MODES</text>
 
-      <rect x="52" y="290" width="826" height="172" rx="12" fill="#ffffff" fill-opacity="0.75" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4" />
-      <text x="68" y="306" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.5">CORE SERVICES</text>
+      <rect x="284" y="54" width="594" height="172" rx="12" fill="#ffffff" fill-opacity="0.75" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4" />
+      <text x="300" y="70" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.5">APPLICATIONS &amp; PLUGINS</text>
+
+      <rect x="284" y="290" width="594" height="172" rx="12" fill="#ffffff" fill-opacity="0.75" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4" />
+      <text x="300" y="306" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.5">CORE SERVICES</text>
 
       <rect x="52" y="520" width="826" height="164" rx="12" fill="#fff1f2" fill-opacity="0.4" stroke="#fecdd3" stroke-width="1.2" stroke-dasharray="5 4" />
       <text x="68" y="536" font-size="10" font-weight="700" fill="#e11d48" letter-spacing="0.5">CI/CD ORCHESTRATION</text>
@@ -172,19 +178,27 @@
       <!-- ==================== CLEAN NON-OVERLAPPING ARROWS ==================== -->
 
       <!-- 1. Desktop App -> Web UI (Embeds UI) -->
-      <path d="M 246 146 L 298 146" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)" />
-      <rect x="249" y="123" width="46" height="16" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="1" />
-      <text x="272" y="134" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b45309">UI</text>
+      <path d="M 230 124 L 298 124" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)" />
+      <rect x="242" y="101" width="44" height="16" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="1" />
+      <text x="264" y="112" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b45309">UI</text>
 
-      <!-- 2. Desktop App -> Statistical Engine (Local Sidecar) -->
-      <path d="M 196 212 L 196 386 L 298 386" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arr-amber)" />
-      <rect x="146" y="248" width="100" height="18" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="1" />
-      <text x="196" y="260" text-anchor="middle" font-size="10" font-weight="700" fill="#b45309">Local Sidecar</text>
+      <!-- 2. Desktop App -> Statistical Engine & AI Service (Local Sidecar) -->
+      <path d="M 149 212 L 149 276 L 274 276 L 274 352 L 298 352" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arr-amber)" />
+      <path d="M 274 276 L 742 276 L 742 318" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arr-amber)" />
+      <rect x="104" y="224" width="90" height="17" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="1" />
+      <text x="149" y="236" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b45309">Local Sidecar</text>
+
+      <!-- 2b. Web & Microservices -> Web UI, saesV2 & saes-ai (Containers) -->
+      <path d="M 230 356 L 254 356 L 254 184 L 298 184" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-sky)" />
+      <path d="M 230 414 L 298 414" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-sky)" />
+      <path d="M 230 436 L 254 436 L 254 476 L 742 476 L 742 454" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-sky)" />
+      <rect x="356" y="467" width="76" height="17" rx="4" fill="#ffffff" stroke="#7dd3fc" stroke-width="1" />
+      <text x="394" y="479" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0369a1">Containers</text>
 
       <!-- 3. Web UI -> Statistical Engine (REST API) -->
-      <path d="M 380 212 L 380 318" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)" />
-      <rect x="342" y="248" width="76" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
-      <text x="380" y="260" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">REST API</text>
+      <path d="M 421 212 L 421 318" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)" />
+      <rect x="383" y="248" width="76" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
+      <text x="421" y="260" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">REST API</text>
 
       <!-- 4. Embedded Chatbot -> AI Service (Chat Stream) -->
       <path d="M 542 184 L 580 184 L 580 358 L 620 358" fill="none" stroke="#059669" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arr-emerald)" />
@@ -223,10 +237,10 @@
       <text x="1246" y="280" text-anchor="middle" font-size="9" font-weight="700" fill="#6d28d9">Code</text>
 
       <!-- 10. Desktop Build CD -> Desktop App (Outer Left Rail) -->
-      <path d="M 70 612 L 42 612 L 42 146 L 68 146" fill="none" stroke="#e11d48" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rose)" />
-      <rect x="10" y="366" width="64" height="30" rx="4" fill="#ffffff" stroke="#fda4af" stroke-width="1" />
-      <text x="42" y="379" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">Build</text>
-      <text x="42" y="390" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">App</text>
+      <path d="M 70 612 L 42 612 L 42 146 L 66 146" fill="none" stroke="#e11d48" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rose)" />
+      <rect x="10" y="255" width="64" height="30" rx="4" fill="#ffffff" stroke="#fda4af" stroke-width="1" />
+      <text x="42" y="268" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">Build</text>
+      <text x="42" y="279" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">App</text>
 
       <!-- 12. CI Quality Gates -> Gates Desktop Build & Release/PyPI -->
       <path d="M 300 611 L 268 611" fill="none" stroke="#e11d48" stroke-width="1.8" marker-end="url(#arr-rose)" />
@@ -239,15 +253,15 @@
 
       <!-- Desktop App -->
       <g filter="url(#node-shadow)">
-        <rect x="70" y="84" width="176" height="128" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" />
-        <g transform="translate(140, 98)" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="68" y="84" width="162" height="128" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" />
+        <g transform="translate(131, 98)" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="32" height="22" rx="2" fill="#fef3c7"/>
           <line x1="0" y1="29" x2="36" y2="29" />
         </g>
-        <text x="158" y="148" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Desktop App</text>
-        <text x="158" y="166" text-anchor="middle" font-size="11" font-weight="600" fill="#b45309">Tauri Native Wrapper</text>
-        <rect x="88" y="178" width="140" height="22" rx="5" fill="#ffffff" stroke="#fde68a" stroke-width="1" />
-        <text x="158" y="193" text-anchor="middle" font-size="10" font-weight="600" fill="#78350f">macOS · Linux · Windows</text>
+        <text x="149" y="148" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Desktop App</text>
+        <text x="149" y="166" text-anchor="middle" font-size="11" font-weight="600" fill="#b45309">Tauri Native Wrapper</text>
+        <rect x="81" y="178" width="136" height="22" rx="5" fill="#ffffff" stroke="#fde68a" stroke-width="1" />
+        <text x="149" y="193" text-anchor="middle" font-size="9.5" font-weight="600" fill="#78350f">macOS · Linux · Windows</text>
       </g>
 
       <!-- Web UI + Embedded Chatbot -->
@@ -287,6 +301,21 @@
 
 
       <!-- ==================== ROW 2: CORE SERVICES ==================== -->
+
+      <!-- Web & Microservices (Containerized Deployment Mode) -->
+      <g filter="url(#node-shadow)">
+        <rect x="68" y="320" width="162" height="132" rx="10" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.8" />
+        <g transform="translate(133, 334)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="0" y="2" width="32" height="22" rx="4" fill="#e0f2fe" />
+          <line x1="7" y1="9" x2="25" y2="9" />
+          <line x1="7" y1="16" x2="19" y2="16" />
+        </g>
+        <text x="149" y="376" text-anchor="middle" font-size="13.5" font-weight="800" fill="#0f172a">Web Stack</text>
+        <text x="149" y="393" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0369a1">Microservices Mode</text>
+        <rect x="80" y="406" width="138" height="36" rx="6" fill="#ffffff" stroke="#bae6fd" stroke-width="1" />
+        <text x="149" y="421" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0c4a6e">Containerized Services</text>
+        <text x="149" y="435" text-anchor="middle" font-size="9" fill="#64748b">Browser UI · REST APIs</text>
+      </g>
 
       <!-- Statistical Engine & API (saesV2) -->
       <g filter="url(#node-shadow)">
@@ -357,7 +386,7 @@
         <text x="678" y="584" font-size="13.5" font-weight="700" fill="#0f172a">Release &amp; PyPI</text>
         <text x="678" y="600" font-size="10.5" font-weight="600" fill="#be123c">Automated Distribution</text>
         <rect x="638" y="616" width="208" height="36" rx="6" fill="#fff1f2" stroke="#fecdd3" stroke-width="1" />
-        <text x="742" y="638" text-anchor="middle" font-size="10.5" font-weight="600" fill="#881337">SemVer · Changelog · Package</text>
+        <text x="742" y="638" text-anchor="middle" font-size="10.5" font-weight="600" fill="#881337">SemVer · Docker · PyPI</text>
       </g>
 
 
@@ -411,7 +440,7 @@
 
     <p class="caption">
       <strong>Figure 1. High-level architecture of the SAES Framework.</strong>
-      The SAES Framework coordinates the desktop application, web UI with embedded chatbot, statistical engine, AI service, agentic development skills, and CI/CD pipelines, integrating with the external ecosystem (agentic IDEs, LLM providers, and PyPI distribution).
+      SAES supports two deployment modes: a standalone <strong>Desktop App</strong> (native wrapper embedding the UI and local Python sidecar) and a containerized <strong>Web Stack</strong> (microservices orchestration for the browser UI, statistical engine, and AI service), alongside agentic skills and CI/CD pipelines.
     </p>
   </div>
 

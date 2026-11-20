@@ -1,4 +1,4 @@
-.PHONY: help install start start-desktop stop status start-saes start-saesV2 start-ai start-ai-debug start-ui start-ui-desktop build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
+.PHONY: help install start start-desktop stop status start-saes start-saesV2 start-ai start-ai-debug start-ui start-ui-desktop docker-up docker-down build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
 
 SHELL := /bin/bash
 export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:$(PATH)
@@ -77,6 +77,13 @@ start-ui: ## Levanta únicamente el servidor web de saes-ui (:1420)
 
 start-ui-desktop: ## Levanta únicamente la app desktop Tauri desde el umbrella
 	$(TAURI_BIN) dev
+
+# ── Docker (Umbrella) ────────────────────────────────────────
+docker-up: ## Construye y levanta los servicios en segundo plano con Docker Compose
+	docker compose up -d --build
+
+docker-down: ## Detiene y elimina los contenedores de Docker Compose
+	docker compose down
 
 # ── Desktop Packaging (Umbrella) ─────────────────────────────
 build-backend: ## Empaqueta saesV2 + saes-ai en el sidecar saes-backend con PyInstaller
