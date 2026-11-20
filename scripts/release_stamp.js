@@ -12,12 +12,96 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-function getGitUser() {
+function execSafe(cmd, cwd = process.cwd()) {
   try {
-    return execSync("git log -1 --pretty=format:%an").toString().trim();
+    return execSync(cmd, { cwd, stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
   } catch (e) {
-    return "unknown";
+    return null;
   }
+}
+
+function getGitUser() {
+  return execSafe("git log -1 --pretty=format:%an") || "unknown";
+}
+
+function getSubmodules() {
+  const output = execSafe("git config --file .gitmodules --get-regexp path");
+  if (!output) return [];
+  return output
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/)[1])
+    .filter(Boolean);
+}
+
+function getBaseReleaseRef() {
+  const versionCommit = execSafe("git log -n 1 --format=%H -- version.txt");
+  if (versionCommit) return versionCommit;
+  const latestTag = execSafe("git describe --tags --abbrev=0");
+  if (latestTag) return latestTag;
+  return execSafe("git rev-parse HEAD~1");
+}
+
+function getSubmoduleTreeSha(ref, subPath) {
+  if (!ref) return null;
+  const line = execSafe(`git ls-tree ${ref} -- ${subPath}`);
+  if (!line) return null;
+  const match = line.match(/^\d+\s+commit\s+([0-9a-f]{40})\s+/);
+  return match ? match[1] : null;
+}
+
+function getSubmoduleVersionAtSha(subPath, sha) {
+  if (!sha || !fs.existsSync(subPath)) return null;
+  let version = execSafe(`git show ${sha}:version.txt`, subPath);
+  if (!version) {
+    execSafe(`git fetch --depth=1 origin ${sha}`, subPath);
+    version = execSafe(`git show ${sha}:version.txt`, subPath);
+  }
+  return version ? version.replace("-SNAPSHOT", "").trim() : null;
+}
+
+function getSubmoduleUpdates() {
+  const baseRef = getBaseReleaseRef();
+  if (!baseRef) return [];
+
+  const submodules = getSubmodules();
+  const updates = [];
+
+  for (const subPath of submodules) {
+    const newSha = getSubmoduleTreeSha("HEAD", subPath);
+    if (!newSha) continue;
+
+    const oldSha = getSubmoduleTreeSha(baseRef, subPath);
+    if (oldSha === newSha) continue;
+
+    const newVersion =
+      getSubmoduleVersionAtSha(subPath, newSha) ||
+      (fs.existsSync(path.join(subPath, "version.txt"))
+        ? fs.readFileSync(path.join(subPath, "version.txt"), "utf-8").trim()
+        : null);
+    const oldVersion = oldSha ? getSubmoduleVersionAtSha(subPath, oldSha) : null;
+
+    if (!oldSha) {
+      updates.push(
+        newVersion
+          ? `- **${subPath}**: \`${newVersion}\` (added)`
+          : `- **${subPath}**: added (\`${newSha.slice(0, 7)}\`)`
+      );
+    } else if (oldVersion && newVersion && oldVersion !== newVersion) {
+      updates.push(`- **${subPath}**: \`${oldVersion}\` → \`${newVersion}\``);
+    } else if (newVersion) {
+      updates.push(
+        `- **${subPath}**: \`${newVersion}\` (updated to \`${newSha.slice(0, 7)}\`)`
+      );
+    } else {
+      updates.push(
+        `- **${subPath}**: \`${oldSha.slice(0, 7)}\` → \`${newSha.slice(0, 7)}\``
+      );
+    }
+  }
+
+  return updates;
 }
 
 function parseArgs() {
@@ -84,6 +168,7 @@ function main() {
 
   const author = args.author || getGitUser();
   const date = args.date || new Date().toISOString().split("T")[0];
+  const submoduleUpdates = getSubmoduleUpdates();
 
   console.log("=== SAES Umbrella Release Stamp ===");
   console.log(`  Current:  ${current}`);
@@ -92,6 +177,12 @@ function main() {
   console.log(`  Bump:     ${args.bump}`);
   console.log(`  Author:   ${author}`);
   console.log(`  Date:     ${date}`);
+  if (submoduleUpdates.length > 0) {
+    console.log("  Updated Repositories:");
+    for (const line of submoduleUpdates) {
+      console.log(`    ${line}`);
+    }
+  }
 
   if (args.dryRun) {
     console.log("\n[DRY RUN] No files modified.");
@@ -122,11 +213,18 @@ function main() {
   }
 
   const unreleasedEnd = unreleasedIdx + unreleasedMarker.length;
-  let entries = content.slice(unreleasedEnd, releasedIdx).trim();
+  const manualEntries = content.slice(unreleasedEnd, releasedIdx).trim();
 
-  if (!entries) {
-    entries = "- No updates for this version";
+  const sections = [];
+  if (manualEntries) {
+    sections.push(manualEntries);
   }
+  if (submoduleUpdates.length > 0) {
+    sections.push(`### Updated Repositories\n${submoduleUpdates.join("\n")}`);
+  }
+
+  const entries =
+    sections.length > 0 ? sections.join("\n\n") : "- No updates for this version";
 
   const beforeUnreleased = content.slice(0, unreleasedIdx);
   const afterReleased = content

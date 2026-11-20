@@ -30,3 +30,13 @@ make start-desktop  # Start all 3 services with Tauri Desktop in dev mode
 make build-desktop  # Package saes-backend sidecar and build Tauri desktop installer
 make ci             # Run lint, typecheck, tests, and cargo check across all repos
 ```
+
+---
+
+## Desktop App Installation (macOS)
+
+If macOS Gatekeeper blocks the downloaded `SAES.app` (e.g., *"SAES.app is damaged and can't be opened"* or *"cannot be opened because the developer cannot be verified"*), move `SAES.app` to `/Applications` and remove the quarantine attribute with:
+
+```bash
+xattr -cr /Applications/SAES.app
+```
