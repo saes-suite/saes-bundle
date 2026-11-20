@@ -1,0 +1,63 @@
+services:
+  saes-v2:
+    image: python:3.12-slim
+    container_name: saes-v2
+    command: >
+      sh -c "pip install --no-cache-dir 'saesV2[all]==0.3.1' &&
+             uvicorn saesV2.server.app:app --host 0.0.0.0 --port 8060"
+    ports:
+      - "8060:8060"
+    environment:
+      SAES_DATASETS_DIR: /data/datasets
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - saes_datasets:/data/datasets
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8060/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  saes-ai:
+    build:
+      context: https://github.com/saes-suite/saes-ai.git#v0.3.1
+      dockerfile: Dockerfile
+    container_name: saes-ai
+    ports:
+      - "8070:8070"
+    environment:
+      SAES_DATASETS_DIR: /data/datasets
+      SAES_AI_LOG_LEVEL: ${SAES_AI_LOG_LEVEL:-INFO}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - saes_datasets:/data/datasets
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8070/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  saes-ui:
+    build:
+      context: https://github.com/saes-suite/saes-ui.git#v0.3.1
+      dockerfile: Dockerfile
+    container_name: saes-ui
+    ports:
+      - "1420:80"
+    depends_on:
+      saes-v2:
+        condition: service_healthy
+      saes-ai:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  saes_datasets:

@@ -15,6 +15,14 @@ on:
           - minor
           - patch
           - major
+      desktop_mode:
+        description: "Desktop executables mode"
+        required: true
+        type: choice
+        default: rebuild
+        options:
+          - rebuild
+          - copy-previous
 
 permissions:
   contents: write
@@ -26,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.stamp.outputs.version }}
+      desktop_mode: ${{ steps.bump.outputs.desktop_mode }}
 
     steps:
       - name: Checkout repository
@@ -43,12 +52,16 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Determine bump type from PR branch or manual input
+      - name: Determine bump type and desktop mode
         id: bump
+        env:
+          LABELS_JSON: ${{ toJson(github.event.pull_request.labels) }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "author=@${{ github.actor }}" >> "$GITHUB_OUTPUT"
             echo "bump=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
+            echo "desktop_mode=${{ inputs.desktop_mode }}" >> "$GITHUB_OUTPUT"
           else
             BRANCH="${{ github.event.pull_request.head.ref }}"
             AUTHOR="@${{ github.event.pull_request.user.login }}"
@@ -62,6 +75,13 @@ jobs:
               echo "bump=patch" >> "$GITHUB_OUTPUT"
             else
               echo "bump=minor" >> "$GITHUB_OUTPUT"
+            fi
+
+            SKIP_DESKTOP=$(python3 -c 'import json, os; labels = [l["name"] for l in json.loads(os.environ.get("LABELS_JSON") or "[]")]; title = os.environ.get("PR_TITLE") or ""; print("true" if ("skip-desktop-build" in labels or "[skip-desktop]" in title.lower()) else "false")')
+            if [[ "$SKIP_DESKTOP" == "true" ]]; then
+              echo "desktop_mode=copy-previous" >> "$GITHUB_OUTPUT"
+            else
+              echo "desktop_mode=rebuild" >> "$GITHUB_OUTPUT"
             fi
           fi
 
@@ -82,6 +102,7 @@ jobs:
           path: |
             version.txt
             CHANGELOG.md
+            docker-compose.yml
             src-tauri/tauri.conf.json
             src-tauri/Cargo.toml
             src-tauri/Cargo.lock
@@ -89,6 +110,7 @@ jobs:
   publish-desktop:
     name: Build & Publish Desktop Packages
     needs: prepare
+    if: needs.prepare.outputs.desktop_mode == 'rebuild'
     uses: ./.github/workflows/desktop-build.yml
     with:
       release_tag: v${{ needs.prepare.outputs.version }}
@@ -96,9 +118,69 @@ jobs:
       use_release_metadata: true
     secrets: inherit
 
+  copy-previous-desktop:
+    name: Copy Previous Desktop Release
+    needs: prepare
+    if: needs.prepare.outputs.desktop_mode == 'copy-previous'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Apply bumped release metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: release-metadata
+          path: .
+
+      - name: Copy previous release assets and publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ needs.prepare.outputs.version }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'EOF'
+          import os, pathlib, re
+
+          version = os.environ["TAG"].lstrip("v")
+          text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pattern = re.compile(
+              rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              re.MULTILINE | re.DOTALL,
+          )
+          match = pattern.search(text)
+          notes = match.group(0).strip() if match else f"Release v{version}"
+          pathlib.Path("release_notes.md").write_text(notes + "\n", encoding="utf-8")
+          EOF
+
+          PREV_TAG=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName' --repo "${{ github.repository }}" || true)
+          mkdir -p prev_assets
+          if [ -n "$PREV_TAG" ]; then
+            echo "Copying desktop assets from $PREV_TAG..."
+            gh release download "$PREV_TAG" --dir prev_assets --repo "${{ github.repository }}" || true
+            printf "\n> **Note:** Desktop installers were carried over from \`%s\`.\n" "$PREV_TAG" >> release_notes.md
+          fi
+
+          if [ -n "$(ls -A prev_assets 2>/dev/null)" ]; then
+            gh release create "$TAG" prev_assets/* \
+              --title "SAES $TAG" \
+              --notes-file release_notes.md \
+              --target "$TARGET_SHA" \
+              --repo "${{ github.repository }}"
+          else
+            gh release create "$TAG" \
+              --title "SAES $TAG" \
+              --notes-file release_notes.md \
+              --target "$TARGET_SHA" \
+              --repo "${{ github.repository }}"
+          fi
+
   commit-and-push:
     name: Commit & Push Release Stamp
-    needs: [prepare, publish-desktop]
+    needs: [prepare, publish-desktop, copy-previous-desktop]
+    if: always() && needs.prepare.result == 'success' && (needs.publish-desktop.result == 'success' || needs.copy-previous-desktop.result == 'success')
     runs-on: ubuntu-latest
 
     steps:
@@ -121,6 +203,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.txt CHANGELOG.md src-tauri/tauri.conf.json src-tauri/Cargo.toml
+          if [ -f docker-compose.yml ]; then git add docker-compose.yml; fi
           if [ -f src-tauri/Cargo.lock ]; then git add src-tauri/Cargo.lock; fi
           RELEASE_VERSION="${{ needs.prepare.outputs.version }}"
           git commit -m "Setting release v${RELEASE_VERSION} [skip ci]"

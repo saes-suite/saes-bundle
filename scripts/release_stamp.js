@@ -104,6 +104,49 @@ function getSubmoduleUpdates() {
   return updates;
 }
 
+function readSubmoduleVersion(subPath) {
+  const versionFile = path.resolve(subPath, "version.txt");
+  if (!fs.existsSync(versionFile)) return null;
+  const raw = fs.readFileSync(versionFile, "utf-8").trim().replace("-SNAPSHOT", "");
+  return raw || null;
+}
+
+function updateDockerCompose(composePath) {
+  if (!fs.existsSync(composePath)) return;
+  const v2Version = readSubmoduleVersion("saesV2");
+  const aiVersion = readSubmoduleVersion("saes-ai");
+  const uiVersion = readSubmoduleVersion("saes-ui");
+
+  let content = fs.readFileSync(composePath, "utf-8");
+  const original = content;
+
+  if (v2Version) {
+    content = content.replace(
+      /(saesV2\[all\])(?:==[^\s'"]+)?/g,
+      `$1==${v2Version}`
+    );
+  }
+  if (aiVersion) {
+    content = content.replace(
+      /(https:\/\/github\.com\/saes-suite\/saes-ai\.git)(?:#[^\s'"]+)?/g,
+      `$1#v${aiVersion}`
+    );
+  }
+  if (uiVersion) {
+    content = content.replace(
+      /(https:\/\/github\.com\/saes-suite\/saes-ui\.git)(?:#[^\s'"]+)?/g,
+      `$1#v${uiVersion}`
+    );
+  }
+
+  if (content !== original) {
+    fs.writeFileSync(composePath, content);
+    console.log(
+      `✅ docker-compose.yml updated (saesV2==${v2Version || "?"}, saes-ai#v${aiVersion || "?"}, saes-ui#v${uiVersion || "?"})`
+    );
+  }
+}
+
 function parseArgs() {
   const args = process.argv.slice(2);
   const parsed = {
@@ -115,6 +158,7 @@ function parseArgs() {
     changelogFile: "CHANGELOG.md",
     tauriConfFile: "src-tauri/tauri.conf.json",
     cargoFile: "src-tauri/Cargo.toml",
+    dockerComposeFile: "docker-compose.yml",
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -251,6 +295,8 @@ function main() {
     fs.writeFileSync(cargoPath, cargoContent);
     console.log(`✅ src-tauri/Cargo.toml version bumped to ${nextVersion}`);
   }
+
+  updateDockerCompose(path.resolve(args.dockerComposeFile));
 
   console.log(`\n✅ Changelog stamped as ${release}`);
   console.log(`✅ Version bumped to ${nextVersion}`);
