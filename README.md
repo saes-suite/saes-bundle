@@ -33,6 +33,22 @@ make ci             # Run lint, typecheck, tests, and cargo check across all rep
 
 ---
 
+## Docker Compose Deployment
+
+Run the full web stack (`saes-v2` from PyPI `saesV2[all]`, `saes-ai`, and `saes-ui`) using [docker-compose.yml](docker-compose.yml):
+
+```bash
+docker compose up -d --build
+```
+
+- **UI**: `http://localhost:1420`
+- **saesV2 API**: `http://localhost:8060`
+- **saes-ai API**: `http://localhost:8070`
+- **Shared datasets**: Persisted in the `saes_datasets` Docker volume (`/data/datasets` via `SAES_DATASETS_DIR`).
+- **LLM providers**: Pass `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` in the environment (or `.env`), or connect to a host Ollama instance via `http://host.docker.internal:11434`.
+
+---
+
 ## Desktop App Installation (macOS)
 
 If macOS Gatekeeper blocks the downloaded `SAES.app` (e.g., *"SAES.app is damaged and can't be opened"* or *"cannot be opened because the developer cannot be verified"*), move `SAES.app` to `/Applications` and remove the quarantine attribute with:

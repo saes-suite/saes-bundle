@@ -82,6 +82,7 @@ jobs:
           path: |
             version.txt
             CHANGELOG.md
+            docker-compose.yml
             src-tauri/tauri.conf.json
             src-tauri/Cargo.toml
             src-tauri/Cargo.lock
@@ -121,6 +122,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.txt CHANGELOG.md src-tauri/tauri.conf.json src-tauri/Cargo.toml
+          if [ -f docker-compose.yml ]; then git add docker-compose.yml; fi
           if [ -f src-tauri/Cargo.lock ]; then git add src-tauri/Cargo.lock; fi
           RELEASE_VERSION="${{ needs.prepare.outputs.version }}"
           git commit -m "Setting release v${RELEASE_VERSION} [skip ci]"
