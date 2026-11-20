@@ -1,6 +1,6 @@
 """Unified sidecar entrypoint for SAES Desktop.
 
-Runs both the SAES statistical REST API (:8060, with mounted AI routes)
+Runs both the SAES statistical REST API (:8060)
 and the standalone SAES-AI REST API (:8070) inside a single process so
 Tauri can manage the entire Python backend as one sidecar binary.
 """
@@ -38,12 +38,7 @@ async def _serve_all(host: str, api_port: int, ai_port: int) -> None:
     import uvicorn
 
     from saes_ai.server.app import app as ai_app
-    from saes_ai.server.routes import router as ai_router
     from saesV2.server.app import app as api_app
-
-    # Ensure SAES-AI routes are mounted on :8060 even when frozen with PyInstaller
-    if "/api/v1/chat/probe" not in api_app.openapi().get("paths", {}):
-        api_app.include_router(ai_router)
 
     api_config = uvicorn.Config(
         api_app,
