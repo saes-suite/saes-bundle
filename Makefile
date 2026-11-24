@@ -1,4 +1,4 @@
-.PHONY: help install start start-desktop stop status start-saes start-ai start-ai-debug start-ui start-ui-desktop start-docs docs docs-serve docs-preview docker-up docker-down build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
+.PHONY: help install start start-desktop stop status start-saes start-ai start-ai-debug start-ui start-ui-desktop start-docs docs docs-serve docs-preview docker docker-up docker-down build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
 
 SHELL := /bin/bash
 export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:$(PATH)
@@ -90,7 +90,10 @@ docs-preview: ## Build and serve the exact static GitHub Pages bundle locally (:
 	$(MAKE) -C saes docs-preview DOCS_PORT=$(DOCS_PORT)
 
 # ── Docker (Umbrella) ────────────────────────────────────────
-docker-up: ## Build and start services in the background with Docker Compose
+docker: ## Start Docker Compose services using cached local images (no rebuild/refetch)
+	docker compose up -d
+
+docker-up: ## Rebuild images from remote tags and start services with Docker Compose
 	docker compose up -d --build
 
 docker-down: ## Stop and remove Docker Compose containers

@@ -56,14 +56,16 @@ make ci             # Run lint, typecheck, tests, and cargo check across all 4 r
 Run the full web stack (`saes` from PyPI `saes[all]`, `saes-ai`, and `saes-ui`) using [docker-compose.yml](docker-compose.yml):
 
 ```bash
-docker compose up -d --build
+make docker         # Start Docker Compose stack using cached local images (no rebuild/refetch)
+make docker-up      # Rebuild images from remote release tags and start Docker Compose stack
+make docker-down    # Stop and remove Docker Compose containers
 ```
 
 - **UI**: `http://localhost:1420`
 - **saes API**: `http://localhost:8060`
 - **saes-ai API**: `http://localhost:8070`
 - **Shared datasets**: Persisted in the `saes_datasets` Docker volume (`/data/datasets` via `SAES_DATASETS_DIR`).
-- **LLM providers**: Pass `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` in the environment (or `.env`), or connect to a host Ollama instance via `http://host.docker.internal:11434`.
+- **LLM providers**: Pass `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` in the environment (or `.env`). Host **Ollama** is detected automatically via `host.docker.internal:11434` (override with `OLLAMA_HOST` if needed).
 
 ---
 
