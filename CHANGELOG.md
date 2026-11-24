@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Released]
+
+## [1.0.0] — 2026-11-24 (@rorro6787)
+
 ### Changed
 - **Breaking**: Consolidated core submodule and package references from `saesV2` to canonical **`saes`** (`https://github.com/saes-suite/saes.git`, PyPI `saes[all]`, Docker service `saes`, PyInstaller sidecar, `Makefile`, `scripts/release_stamp.js`, and workspace rules).
 
@@ -17,7 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Updated `packaging/build_backend.py` PyInstaller spec by removing obsolete `--collect-all tabulate` and adding explicit `statsmodels` submodules/hidden imports (`statsmodels.stats`, `statsmodels.distributions`) required by `saes` desktop sidecar builds.
 
-## [Released]
+### Updated Repositories
+- **saes**: `2.0.0` (added)
+- **saes-ai**: `0.3.2` → `0.4.0`
+- **saes-ui**: `0.3.3` → `0.4.1`
+- **saes-plugins**: `0.2.1` → `1.0.0`
 
 ## [0.5.0] — 2026-11-20 (@rorro6787)
 

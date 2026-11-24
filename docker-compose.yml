@@ -22,7 +22,7 @@ services:
 
   saes-ai:
     build:
-      context: https://github.com/saes-suite/saes-ai.git#v0.3.2
+      context: https://github.com/saes-suite/saes-ai.git#v0.4.0
       dockerfile: Dockerfile
     container_name: saes-ai
     ports:
@@ -47,7 +47,7 @@ services:
 
   saes-ui:
     build:
-      context: https://github.com/saes-suite/saes-ui.git#v0.3.3
+      context: https://github.com/saes-suite/saes-ui.git#v0.4.1
       dockerfile: Dockerfile
     container_name: saes-ui
     ports:
