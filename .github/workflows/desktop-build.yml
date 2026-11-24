@@ -102,7 +102,7 @@ jobs:
       - name: Install saes-ui dependencies
         run: pnpm --dir saes-ui install --frozen-lockfile
 
-      - name: Build unified Python backend sidecar (saesV2 + saes-ai)
+      - name: Build unified Python backend sidecar (saes + saes-ai)
         run: python packaging/build_backend.py --target ${{ matrix.target }}
 
       - name: Build Tauri Desktop Application (manual / non-release)

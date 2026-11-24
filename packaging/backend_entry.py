@@ -37,8 +37,8 @@ def _ensure_datasets_dir() -> None:
 async def _serve_all(host: str, api_port: int, ai_port: int) -> None:
     import uvicorn
 
+    from saes.server.app import app as api_app
     from saes_ai.server.app import app as ai_app
-    from saesV2.server.app import app as api_app
 
     api_config = uvicorn.Config(
         api_app,

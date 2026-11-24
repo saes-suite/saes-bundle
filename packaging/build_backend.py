@@ -36,13 +36,13 @@ def venv_python() -> Path:
 
 
 def ensure_build_venv() -> Path:
-    """Create/update packaging/.venv with saesV2, saes-ai, and pyinstaller."""
+    """Create/update packaging/.venv with saes, saes-ai, and pyinstaller."""
     py = venv_python()
     if not py.exists():
         print(f"Creating build venv at {VENV_DIR}...")
         subprocess.run(["uv", "venv", str(VENV_DIR), "--python", "3.12"], check=True)
 
-    print("Installing saesV2[viz,api], saes-ai[providers], and pyinstaller into build venv...")
+    print("Installing saes[viz,api], saes-ai[providers], and pyinstaller into build venv...")
     subprocess.run(
         [
             "uv",
@@ -51,7 +51,7 @@ def ensure_build_venv() -> Path:
             "--python",
             str(py),
             "-e",
-            f"{ROOT / 'saesV2'}[viz,api]",
+            f"{ROOT / 'saes'}[viz,api]",
             "-e",
             f"{ROOT / 'saes-ai'}[providers]",
             "pyinstaller>=6.10.0",
@@ -86,15 +86,27 @@ def build_sidecar(target: str, skip_install: bool = False) -> Path:
         "--specpath",
         str(work_dir),
         "--paths",
-        str(ROOT / "saesV2" / "src"),
+        str(ROOT / "saes" / "src"),
         "--paths",
         str(ROOT / "saes-ai" / "src"),
         "--collect-all",
-        "saesV2",
+        "saes",
         "--collect-all",
         "saes_ai",
-        "--collect-all",
-        "tabulate",
+        "--collect-submodules",
+        "statsmodels.stats",
+        "--collect-submodules",
+        "statsmodels.distributions",
+        "--hidden-import",
+        "statsmodels.api",
+        "--hidden-import",
+        "statsmodels.stats.diagnostic",
+        "--hidden-import",
+        "statsmodels.stats.multitest",
+        "--hidden-import",
+        "statsmodels.stats.multicomp",
+        "--hidden-import",
+        "statsmodels.stats.power",
         "--hidden-import",
         "uvicorn.logging",
         "--hidden-import",

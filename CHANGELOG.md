@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Breaking**: Consolidated core submodule and package references from `saesV2` to canonical **`saes`** (`https://github.com/saes-suite/saes.git`, PyPI `saes[all]`, Docker service `saes`, PyInstaller sidecar, `Makefile`, `scripts/release_stamp.js`, and workspace rules).
+
+### Added
+- Root `Makefile` documentation targets (`start-docs`, `docs-serve`, `docs`, `docs-preview`) to build and preview the `saes` Material for MkDocs GitHub Pages site locally (`:8000`).
+- Updated umbrella `README.md` with GitHub Pages documentation link, `saes-plugins/` architecture entry, and local documentation preview commands.
+
+### Fixed
+- Updated `packaging/build_backend.py` PyInstaller spec by removing obsolete `--collect-all tabulate` and adding explicit `statsmodels` submodules/hidden imports (`statsmodels.stats`, `statsmodels.distributions`) required by `saes` desktop sidecar builds.
+
 ## [Released]
 
 ## [0.5.0] — 2026-11-20 (@rorro6787)

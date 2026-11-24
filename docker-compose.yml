@@ -1,10 +1,10 @@
 services:
-  saes-v2:
+  saes:
     image: python:3.12-slim
-    container_name: saes-v2
+    container_name: saes
     command: >
-      sh -c "pip install --no-cache-dir 'saesV2[all]==0.3.1' &&
-             uvicorn saesV2.server.app:app --host 0.0.0.0 --port 8060"
+      sh -c "pip install --no-cache-dir 'saes[all]==2.0.0' &&
+             uvicorn saes.server.app:app --host 0.0.0.0 --port 8060"
     ports:
       - "8060:8060"
     environment:
@@ -53,7 +53,7 @@ services:
     ports:
       - "1420:80"
     depends_on:
-      saes-v2:
+      saes:
         condition: service_healthy
       saes-ai:
         condition: service_healthy
