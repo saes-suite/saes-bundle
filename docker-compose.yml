@@ -29,6 +29,8 @@ services:
       - "8070:8070"
     environment:
       SAES_DATASETS_DIR: /data/datasets
+      SAES_IN_DOCKER: "1"
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       SAES_AI_LOG_LEVEL: ${SAES_AI_LOG_LEVEL:-INFO}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

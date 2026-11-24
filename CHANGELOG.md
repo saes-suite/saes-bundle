@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `make docker` target (`docker compose up -d`) to launch cached Docker images without triggering remote Git rebuilds, keeping `make docker-up` for full `--build` rebuilds.
+
+### Fixed
+- Configured `SAES_IN_DOCKER=1` and `OLLAMA_HOST=http://host.docker.internal:11434` on the `saes-ai` service in `docker-compose.yml` so containerized deployments automatically detect host Ollama models without manual URL changes in UI settings.
+
 ## [Released]
 
 ## [1.0.0] — 2026-11-24 (@rorro6787)
