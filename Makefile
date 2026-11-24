@@ -1,116 +1,127 @@
-.PHONY: help install start start-desktop stop status start-saes start-saesV2 start-ai start-ai-debug start-ui start-ui-desktop docker-up docker-down build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
+.PHONY: help install start start-desktop stop status start-saes start-ai start-ai-debug start-ui start-ui-desktop start-docs docs docs-serve docs-preview docker-up docker-down build-backend build-desktop lint format test ci version release-dry-run release-stamp branch sync-branch
 
 SHELL := /bin/bash
 export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:$(PATH)
 
-BUMP   ?= minor
-AUTHOR ?=
+BUMP      ?= minor
+AUTHOR    ?=
+DOCS_PORT ?= 8000
 TAURI_BIN := $(CURDIR)/saes-ui/node_modules/.bin/tauri
 
 # ── Default ──────────────────────────────────────────────────
-help: ## Muestra esta ayuda
+help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 # ── Setup ────────────────────────────────────────────────────
-install: ## Instala las dependencias de los 3 servicios
-	@echo "📦 Instalando saesV2..."
-	@$(MAKE) -C saesV2 install
-	@echo "📦 Instalando saes-ai..."
+install: ## Install dependencies across all 3 services
+	@echo "📦 Installing saes..."
+	@$(MAKE) -C saes install
+	@echo "📦 Installing saes-ai..."
 	@$(MAKE) -C saes-ai install
-	@echo "📦 Instalando saes-ui..."
+	@echo "📦 Installing saes-ui..."
 	@$(MAKE) -C saes-ui install
-	@echo "✅ Dependencias instaladas en los 3 servicios."
+	@echo "✅ Dependencies installed across all 3 services."
 
-# ── Run (Todos los servicios) ────────────────────────────────
-start: ## Levanta los 3 servicios en paralelo (saesV2 :8060, saes-ai :8070, saes-ui web :1420)
-	@echo "🚀 Levantando servicios SAES..."
-	@echo "   - saesV2 API:  http://localhost:8060"
+# ── Run (All services) ───────────────────────────────────────
+start: ## Start all 3 services in parallel (saes :8060, saes-ai :8070, saes-ui web :1420)
+	@echo "🚀 Starting SAES services..."
+	@echo "   - saes API:  http://localhost:8060"
 	@echo "   - saes-ai API: http://localhost:8070"
 	@echo "   - saes-ui Web: http://localhost:1420"
-	@echo "Presiona Ctrl+C para detener todos los servicios."
+	@echo "Press Ctrl+C to stop all services."
 	@trap 'kill 0' INT TERM EXIT; \
-	$(MAKE) -C saesV2 start-api & \
+	$(MAKE) -C saes start-api & \
 	$(MAKE) -C saes-ai start-api-debug & \
 	$(MAKE) -C saes-ui dev & \
 	wait
 
-start-desktop: ## Levanta los 3 servicios en paralelo con la app Desktop (Tauri) desde el umbrella
-	@echo "🚀 Levantando servicios SAES (Modo Desktop)..."
-	@echo "   - saesV2 API:  http://localhost:8060"
+start-desktop: ## Start all 3 services in parallel with the Tauri Desktop app from the umbrella
+	@echo "🚀 Starting SAES services (Desktop Mode)..."
+	@echo "   - saes API:  http://localhost:8060"
 	@echo "   - saes-ai API: http://localhost:8070"
 	@echo "   - SAES App:    Tauri Desktop (umbrella)"
-	@echo "Presiona Ctrl+C para detener todos los servicios."
+	@echo "Press Ctrl+C to stop all services."
 	@trap 'kill 0' INT TERM EXIT; \
-	$(MAKE) -C saesV2 start-api & \
+	$(MAKE) -C saes start-api & \
 	$(MAKE) -C saes-ai start-api & \
 	SAES_NO_SIDECAR=1 $(TAURI_BIN) dev & \
 	wait
 
-stop: ## Detiene los servicios que estén corriendo en los puertos 8060, 8070 y 1420
-	@echo "🛑 Deteniendo servicios..."
+stop: ## Stop any services running on ports 8060, 8070, and 1420
+	@echo "🛑 Stopping services..."
 	@-lsof -ti:8060 | xargs kill -9 2>/dev/null || true
 	@-lsof -ti:8070 | xargs kill -9 2>/dev/null || true
 	@-lsof -ti:1420 | xargs kill -9 2>/dev/null || true
-	@echo "✅ Puertos 8060, 8070 y 1420 liberados."
+	@echo "✅ Ports 8060, 8070, and 1420 freed."
 
-status: ## Comprueba qué servicios están activos por puerto
-	@echo "🔍 Estado de los servicios:"
-	@lsof -Pi :8060 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saesV2  (:8060) - ACTIVO" || echo "  🔴 saesV2  (:8060) - INACTIVO"
-	@lsof -Pi :8070 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saes-ai (:8070) - ACTIVO" || echo "  🔴 saes-ai (:8070) - INACTIVO"
-	@lsof -Pi :1420 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saes-ui (:1420) - ACTIVO" || echo "  🔴 saes-ui (:1420) - INACTIVO"
+status: ## Check which services are active by port
+	@echo "🔍 Service status:"
+	@lsof -Pi :8060 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saes  (:8060) - ACTIVE" || echo "  🔴 saes  (:8060) - INACTIVE"
+	@lsof -Pi :8070 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saes-ai (:8070) - ACTIVE" || echo "  🔴 saes-ai (:8070) - INACTIVE"
+	@lsof -Pi :1420 -sTCP:LISTEN -t >/dev/null && echo "  🟢 saes-ui (:1420) - ACTIVE" || echo "  🔴 saes-ui (:1420) - INACTIVE"
 
-# ── Run (Servicios individuales) ─────────────────────────────
-start-saesV2: ## Levanta únicamente el servidor API de saesV2 (:8060)
-	$(MAKE) -C saesV2 start-api
+# ── Run (Individual services) ────────────────────────────────
+start-saes: ## Start only the saes REST API server (:8060)
+	$(MAKE) -C saes start-api
 
-start-saes: start-saesV2 ## Alias para start-saesV2
-
-start-ai: ## Levanta únicamente el servidor API de saes-ai (:8070)
+start-ai: ## Start only the saes-ai REST API server (:8070)
 	$(MAKE) -C saes-ai start-api
 
-start-ai-debug: ## Levanta únicamente el servidor API de saes-ai (:8070) con salida DEBUG
+start-ai-debug: ## Start only the saes-ai REST API server (:8070) with DEBUG output
 	$(MAKE) -C saes-ai start-api-debug
 
-start-ui: ## Levanta únicamente el servidor web de saes-ui (:1420)
+start-ui: ## Start only the saes-ui web dev server (:1420)
 	$(MAKE) -C saes-ui dev
 
-start-ui-desktop: ## Levanta únicamente la app desktop Tauri desde el umbrella
+start-ui-desktop: ## Start only the Tauri Desktop app from the umbrella
 	$(TAURI_BIN) dev
 
+# ── Documentation (GitHub Pages) ─────────────────────────────
+start-docs: ## Serve the GitHub Pages documentation locally with live-reload (:8000)
+	$(MAKE) -C saes docs-serve DOCS_PORT=$(DOCS_PORT)
+
+docs-serve: start-docs ## Alias for start-docs
+
+docs: ## Build the static GitHub Pages documentation in strict mode
+	$(MAKE) -C saes docs
+
+docs-preview: ## Build and serve the exact static GitHub Pages bundle locally (:8000)
+	$(MAKE) -C saes docs-preview DOCS_PORT=$(DOCS_PORT)
+
 # ── Docker (Umbrella) ────────────────────────────────────────
-docker-up: ## Construye y levanta los servicios en segundo plano con Docker Compose
+docker-up: ## Build and start services in the background with Docker Compose
 	docker compose up -d --build
 
-docker-down: ## Detiene y elimina los contenedores de Docker Compose
+docker-down: ## Stop and remove Docker Compose containers
 	docker compose down
 
 # ── Desktop Packaging (Umbrella) ─────────────────────────────
-build-backend: ## Empaqueta saesV2 + saes-ai en el sidecar saes-backend con PyInstaller
+build-backend: ## Package saes + saes-ai into the saes-backend PyInstaller sidecar
 	python3 packaging/build_backend.py
 
-build-desktop: build-backend ## Genera el ejecutable/instalador desktop de SAES (UI + API + AI)
+build-desktop: build-backend ## Build the SAES desktop executable/installer (UI + API + AI)
 	$(TAURI_BIN) build
 
 # ── Quality & CI ─────────────────────────────────────────────
-lint: ## Ejecuta los linters en los 4 repositorios
-	$(MAKE) -C saesV2 lint
+lint: ## Run linters across all 4 repositories
+	$(MAKE) -C saes lint
 	$(MAKE) -C saes-ai lint
 	$(MAKE) -C saes-ui lint
 	$(MAKE) -C saes-plugins lint
 
-format: ## Formatea el código en los 3 servicios
-	$(MAKE) -C saesV2 format
+format: ## Format code across all 3 services
+	$(MAKE) -C saes format
 	$(MAKE) -C saes-ai format
 	$(MAKE) -C saes-ui format
 
-test: ## Ejecuta los tests de saesV2, saes-ai y saes-plugins
-	$(MAKE) -C saesV2 test
+test: ## Run tests in saes, saes-ai, and saes-plugins
+	$(MAKE) -C saes test
 	$(MAKE) -C saes-ai test
 	$(MAKE) -C saes-plugins test
 
-ci: ## Ejecuta las validaciones de CI en los 4 repositorios y el wrapper Tauri
-	$(MAKE) -C saesV2 ci
+ci: ## Run full CI checks across all 4 repositories and the Tauri wrapper
+	$(MAKE) -C saes ci
 	$(MAKE) -C saes-ai ci
 	$(MAKE) -C saes-ui ci
 	$(MAKE) -C saes-plugins ci
@@ -122,16 +133,16 @@ ci: ## Ejecuta las validaciones de CI en los 4 repositorios y el wrapper Tauri
 	exit $$STATUS
 
 # ── Release & Versioning (Umbrella) ──────────────────────────
-version: ## Muestra la versión actual del umbrella desde version.txt
+version: ## Print the current umbrella version from version.txt
 	@cat version.txt
 
-release-dry-run: ## Previsualiza el release stamp sin modificar archivos
+release-dry-run: ## Preview the release stamp without modifying files
 	@node scripts/release_stamp.js --dry-run --bump $(BUMP) $(if $(AUTHOR),--author $(AUTHOR),)
 
-release-stamp: ## Estampa CHANGELOG.md y actualiza versión en version.txt y Tauri
+release-stamp: ## Stamp CHANGELOG.md and update version in version.txt and Tauri
 	@node scripts/release_stamp.js --bump $(BUMP) $(if $(AUTHOR),--author $(AUTHOR),)
 
-branch: ## Crea una nueva rama con el prefijo de versión correcto
+branch: ## Create a new branch with the proper version bump prefix
 	@echo ""; \
 	echo "Select version bump type for this branch:"; \
 	echo "  1) minor  (default — new feature, X.Y+1.0)"; \
@@ -161,7 +172,7 @@ branch: ## Crea una nueva rama con el prefijo de versión correcto
 	echo "✅ Branch '$$BRANCH' created."; \
 	echo "📝 Remember to add your changes to CHANGELOG.md under ## [Unreleased]"
 
-sync-branch: ## Crea una rama en el umbrella, actualiza submódulos a main, hace commit y push
+sync-branch: ## Create an umbrella branch, sync submodules to main, commit, and push
 	@set -e; \
 	echo ""; \
 	echo "Select branch type:"; \
@@ -186,14 +197,14 @@ sync-branch: ## Crea una rama en el umbrella, actualiza submódulos a main, hace
 	fi; \
 	BRANCH="$$PREFIX/$$NAME"; \
 	echo ""; \
-	echo "🌿 Creando rama '$$BRANCH' en el umbrella..."; \
+	echo "🌿 Creating branch '$$BRANCH' in umbrella..."; \
 	git checkout -b "$$BRANCH"; \
 	echo ""; \
-	for repo in saesV2 saes-ai saes-ui saes-plugins; do \
-		echo "🔄 Sincronizando $$repo..."; \
+	for repo in saes saes-ai saes-ui saes-plugins; do \
+		echo "🔄 Syncing $$repo..."; \
 		CUR_BRANCH=$$(git -C "$$repo" rev-parse --abbrev-ref HEAD); \
 		if [ "$$CUR_BRANCH" != "main" ]; then \
-			echo "   Cambiando de '$$CUR_BRANCH' a 'main' en $$repo..."; \
+			echo "   Switching from '$$CUR_BRANCH' to 'main' in $$repo..."; \
 			git -C "$$repo" checkout main; \
 		fi; \
 		git -C "$$repo" pull; \
@@ -201,9 +212,9 @@ sync-branch: ## Crea una rama en el umbrella, actualiza submódulos a main, hace
 	echo ""; \
 	git add -A; \
 	if git diff --cached --quiet; then \
-		echo "ℹ️  No hay cambios para hacer commit en el umbrella."; \
+		echo "ℹ️  No changes to commit in umbrella."; \
 	else \
-		echo "📋 Cambios preparados:"; \
+		echo "📋 Staged changes:"; \
 		git status -s; \
 		echo ""; \
 		printf "Commit message: "; \
@@ -215,7 +226,7 @@ sync-branch: ## Crea una rama en el umbrella, actualiza submódulos a main, hace
 		git commit -m "$$COMMIT_MSG"; \
 	fi; \
 	echo ""; \
-	echo "🚀 Pusheando '$$BRANCH' a origin..."; \
+	echo "🚀 Pushing '$$BRANCH' to origin..."; \
 	git push -u origin "$$BRANCH"; \
 	echo ""; \
-	echo "✅ Rama '$$BRANCH' creada, submódulos sincronizados y cambios pusheados."
+	echo "✅ Branch '$$BRANCH' created, submodules synced, and changes pushed."

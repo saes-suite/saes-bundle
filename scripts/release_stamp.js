@@ -113,17 +113,17 @@ function readSubmoduleVersion(subPath) {
 
 function updateDockerCompose(composePath) {
   if (!fs.existsSync(composePath)) return;
-  const v2Version = readSubmoduleVersion("saesV2");
+  const saesVersion = readSubmoduleVersion("saes");
   const aiVersion = readSubmoduleVersion("saes-ai");
   const uiVersion = readSubmoduleVersion("saes-ui");
 
   let content = fs.readFileSync(composePath, "utf-8");
   const original = content;
 
-  if (v2Version) {
+  if (saesVersion) {
     content = content.replace(
-      /(saesV2\[all\])(?:==[^\s'"]+)?/g,
-      `$1==${v2Version}`
+      /(saes\[all\])(?:==[^\s'"]+)?/g,
+      `$1==${saesVersion}`
     );
   }
   if (aiVersion) {
@@ -142,7 +142,7 @@ function updateDockerCompose(composePath) {
   if (content !== original) {
     fs.writeFileSync(composePath, content);
     console.log(
-      `✅ docker-compose.yml updated (saesV2==${v2Version || "?"}, saes-ai#v${aiVersion || "?"}, saes-ui#v${uiVersion || "?"})`
+      `✅ docker-compose.yml updated (saes==${saesVersion || "?"}, saes-ai#v${aiVersion || "?"}, saes-ui#v${uiVersion || "?"})`
     );
   }
 }
