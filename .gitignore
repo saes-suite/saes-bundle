@@ -22,3 +22,6 @@ src-tauri/target/
 src-tauri/gen/
 src-tauri/binaries/*
 !src-tauri/binaries/.gitkeep
+
+# Built MkDocs GitHub Pages site
+/site/

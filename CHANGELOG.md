@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Released]
+
+## [1.0.1] — 2026-11-24 (@rorro6787)
+
+### Changed
+
+- Updated `.github/workflows/release-stamp.yml` (`commit-and-push`) to authenticate via the `saes-release-bot` GitHub App (`actions/create-github-app-token@v1`) for protected `main` rulesets, and ignored local `*.pem` / `app-id.txt` files in `.gitignore`.
+
 ### Added
 - Added `make docker` target (`docker compose up -d`) to launch cached Docker images without triggering remote Git rebuilds, keeping `make docker-up` for full `--build` rebuilds.
 
 ### Fixed
 - Configured `SAES_IN_DOCKER=1` and `OLLAMA_HOST=http://host.docker.internal:11434` on the `saes-ai` service in `docker-compose.yml` so containerized deployments automatically detect host Ollama models without manual URL changes in UI settings.
 
-## [Released]
+### Updated Repositories
+- **saes-ai**: `0.4.0` → `0.4.1`
 
 ## [1.0.0] — 2026-11-24 (@rorro6787)
 
