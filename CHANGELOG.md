@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Released]
+
+## [1.1.0] — 2026-11-27 (@rorro6787)
+
 ### Added
 
 - Bundled PEP entry-point metadata (`--copy-metadata saes`) and `saes.plugins` submodules in `packaging/build_backend.py` so frozen PyInstaller desktop sidecar builds automatically discover and mount the built-in `saes.plugins.pareto` plugin (and any installed SAES Python plugins) alongside the updated `saes`, `saes-ai`, `saes-ui`, and `saes-plugins` releases.
 
-## [Released]
+### Updated Repositories
+- **saes**: `2.0.0` → `2.1.0`
+- **saes-ai**: `0.4.1` → `0.5.0`
+- **saes-ui**: `0.4.1` → `0.5.0`
+- **saes-plugins**: `1.0.0` → `1.1.0`
 
 ## [1.0.1] — 2026-11-24 (@rorro6787)
 

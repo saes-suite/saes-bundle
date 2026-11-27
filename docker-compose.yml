@@ -3,7 +3,7 @@ services:
     image: python:3.12-slim
     container_name: saes
     command: >
-      sh -c "pip install --no-cache-dir 'saes[all]==2.0.0' &&
+      sh -c "pip install --no-cache-dir 'saes[all]==2.1.0' &&
              uvicorn saes.server.app:app --host 0.0.0.0 --port 8060"
     ports:
       - "8060:8060"
@@ -22,7 +22,7 @@ services:
 
   saes-ai:
     build:
-      context: https://github.com/saes-suite/saes-ai.git#v0.4.1
+      context: https://github.com/saes-suite/saes-ai.git#v0.5.0
       dockerfile: Dockerfile
     container_name: saes-ai
     ports:
@@ -49,7 +49,7 @@ services:
 
   saes-ui:
     build:
-      context: https://github.com/saes-suite/saes-ui.git#v0.4.1
+      context: https://github.com/saes-suite/saes-ui.git#v0.5.0
       dockerfile: Dockerfile
     container_name: saes-ui
     ports:
