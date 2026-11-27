@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `saes` submodule pointer to the unified `saes-suite/saes` repository history and latest security-patched release.
+
 ## [Released]
 
 ## [1.1.0] — 2026-11-27 (@rorro6787)
